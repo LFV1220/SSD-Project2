@@ -13,17 +13,79 @@ namespace project2
 {
     public partial class Form2 : Form
     {
-        public Form2(BindingList<candlestick> candlesticks)
+        private BindingList<smartCandlestick> candlesticks { get; set; }
+        private String tickerName { get; set; }
+
+        public Form2(String tickerName, BindingList<smartCandlestick> candlesticks)
         {
             InitializeComponent();
+
+            // Get/set variables
+            this.candlesticks = candlesticks;
+            this.tickerName = tickerName;
+
             displayData(candlesticks);
         }
 
-        // Function to display the stock data as a datagridview, stock price chart, and volume chart
-        private void displayData(BindingList<candlestick> candlesticks)
+        // Function to show the specific stock data pattern, selected by the user
+        private void applyPattern(object sender, EventArgs e)
         {
-            // chart1_stockData.Series.Clear();
-            // chart2_stockVolume.Series.Clear();
+            // Check if selectedindex isnt 0 
+            if (comboBox1_stockPattern.SelectedIndex == -1 || comboBox1_stockPattern.SelectedIndex == 0)
+            {
+                // Error, no ticker selected
+                MessageBox.Show("Please select a stock pattern.", "No Stock Pattern Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Loop through candlestick list 
+            // Check if the candlestick is in the date range
+            // Check smartCandlestick attributes
+
+        }
+
+        // Function to apply the date range to the stock charts
+        private void applyDates(object sender, EventArgs e)
+        {
+            BindingList<smartCandlestick> candlesticksInRange = new BindingList<smartCandlestick>();
+
+            // Check for valid date range
+            if (dateTimePicker2_toDate.Value < dateTimePicker1_fromDate.Value)
+            {
+                // Error, invalid date range
+                MessageBox.Show("Please make sure the \"from\" date is before the \"to\" date.", "Invalid Date Range", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Iterate over all the candlesticks and only add the ones in the date range to new candlesticks list
+            foreach (var cs in this.candlesticks)
+            {
+                DateTime csDate = DateTime.Parse(cs.date);
+                if (csDate < dateTimePicker2_toDate.Value && csDate > dateTimePicker1_fromDate.Value)
+                {
+                    candlesticksInRange.Add(cs);
+                }
+            }
+
+            // Call displayData function with new candlesticks list
+            displayData(candlesticksInRange);
+        }
+
+        // Function to reset what is on the form/page
+        private void resetForm(object sender, EventArgs e)
+        {
+            // Set comboBox and dates to default value
+
+
+            // Call displayData function with global candlesticks list 
+            displayData(this.candlesticks);
+        }
+
+        // Function to display the stock data as a stock price chart and volume chart
+        private void displayData(BindingList<smartCandlestick> candlesticks)
+        {
+            chart1_stockData.Series.Clear();
+            chart2_stockVolume.Series.Clear();
 
             Series candlestickSeries = new Series("Candlestick")
             {
@@ -31,7 +93,7 @@ namespace project2
                 XValueType = ChartValueType.Date,
             };
 
-            Series volumeSeries = new Series("volume")
+            Series volumeSeries = new Series("Volume")
             {
                 ChartType = SeriesChartType.Column,
                 XValueType = ChartValueType.Date,
@@ -49,8 +111,8 @@ namespace project2
                 };
 
                 // candlestick size based on price difference
-                double pricedifference = Math.Abs((double)cs.close - (double)cs.open);
-                datapoint.SetCustomProperty("pricedifference", pricedifference.ToString());
+                double priceDifference = Math.Abs((double)cs.close - (double)cs.open);
+                datapoint.SetCustomProperty("PriceDifference", priceDifference.ToString());
 
                 // set the color based on open and close values
                 if (cs.open < cs.close)
@@ -59,11 +121,11 @@ namespace project2
                 }
                 else
                 {
-                    datapoint.Color = Color.Green;
+                    datapoint.Color = Color.Red;
                 }
 
                 candlestickSeries.Points.Add(datapoint);
-                volumeValues.Add((double)cs.volume);
+                volumeValues.Add(cs.volume);
 
                 yValues.Add((double)cs.open);
                 yValues.Add((double)cs.high);
@@ -86,23 +148,18 @@ namespace project2
             chart2_stockVolume.Series.Add(volumeSeries);
 
             chart1_stockData.ChartAreas[0].AxisY.Minimum = yValues.Min();
-            chart1_stockData.ChartAreas[0].AxisY.Minimum = yValues.Max();
-            chart1_stockData.ChartAreas[0].AxisY.LabelStyle.Format = "f0";
+            chart1_stockData.ChartAreas[0].AxisY.Maximum = yValues.Max();
+            chart1_stockData.ChartAreas[0].AxisY.LabelStyle.Format = "F0";
             chart2_stockVolume.ChartAreas[0].AxisY.Minimum = volumeValues.Min();
             chart2_stockVolume.ChartAreas[0].AxisY.Maximum = volumeValues.Max();
-            chart2_stockVolume.ChartAreas[0].AxisY.LabelStyle.Format = "f0";
-
-            // setting up the title and labels
-            //string tickername = combobox1_ticker.selectedindex != -1
-            //   ? combobox1_ticker.selecteditem.tostring() + "-" + timeperiod
-            //    : path.getfilenamewithoutextension(file);
+            chart2_stockVolume.ChartAreas[0].AxisY.LabelStyle.Format = "F0";
 
             chart1_stockData.Titles.Clear();
-            chart1_stockData.Titles.Add(new Title("tickername"));
+            chart1_stockData.Titles.Add(new Title(tickerName));
             chart2_stockVolume.Titles.Clear();
-            chart2_stockVolume.Titles.Add(new Title("tickername" + " - volume chart"));
-            chart1_stockData.ChartAreas[0].AxisX.LabelStyle.Format = "mm/dd/yyyy";
-            chart2_stockVolume.ChartAreas[0].AxisX.LabelStyle.Format = "mm/dd/yyyy";
+            chart2_stockVolume.Titles.Add(new Title(tickerName + " - Volume"));
+            chart1_stockData.ChartAreas[0].AxisX.LabelStyle.Format = "MM/dd/yyyy";
+            chart2_stockVolume.ChartAreas[0].AxisX.LabelStyle.Format = "MM/dd/yyyy";
         }
 
     }

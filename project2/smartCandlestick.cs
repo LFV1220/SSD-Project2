@@ -25,9 +25,9 @@ namespace project2
         public bool isHammer { get; set; }
         public bool isInvertedHammer { get; set; }
 
-        smartCandlestick() { }
+        public smartCandlestick() { }
 
-        smartCandlestick(string rowOfData) : base(rowOfData)
+        public smartCandlestick(string rowOfData) : base(rowOfData)
         {
             range = this.high - this.low;
             topPrice = Math.Max(this.open, this.close);
@@ -36,6 +36,15 @@ namespace project2
             upperTail = this.high - topPrice;
             lowerTail = bottomPrice - this.low;
 
+            isBullish = this.open < this.close;
+            isBearish = this.open > this.close;
+            isNeutral = this.open == this.close;
+            isMarubozu = upperTail == 0 && lowerTail == 0;
+            isDoji = isNeutral;
+            isDragonFlyDoji = upperTail == 0 && lowerTail > 0;
+            isGravestoneDoji = upperTail > 0 && lowerTail == 0;
+            isHammer = isBullish && lowerTail > bodyRange / 2;
+            isInvertedHammer = isBullish && upperTail > bodyRange / 2;
 
         }
     }

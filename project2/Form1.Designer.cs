@@ -57,6 +57,7 @@
             radioButton1_daily.TabStop = true;
             radioButton1_daily.Text = "Daily";
             radioButton1_daily.UseVisualStyleBackColor = true;
+            radioButton1_daily.CheckedChanged += radioButton_CheckedChanged_setPeriod;
             // 
             // radioButton2_weekly
             // 
@@ -67,6 +68,7 @@
             radioButton2_weekly.TabIndex = 2;
             radioButton2_weekly.Text = "Weekly";
             radioButton2_weekly.UseVisualStyleBackColor = true;
+            radioButton2_weekly.CheckedChanged += radioButton_CheckedChanged_setPeriod;
             // 
             // radioButton3_monthly
             // 
@@ -77,6 +79,7 @@
             radioButton3_monthly.TabIndex = 3;
             radioButton3_monthly.Text = "Monthly";
             radioButton3_monthly.UseVisualStyleBackColor = true;
+            radioButton3_monthly.CheckedChanged += radioButton_CheckedChanged_setPeriod;
             // 
             // button1_viewTicker
             // 
@@ -111,6 +114,7 @@
             // 
             openFileDialog1.FileName = "openFileDialog1";
             openFileDialog1.Filter = "All Stock Files|*.csv|Daily Stocks|*-Day.csv|Weekly Stocks|*-Week.csv|Monthly Stocks|*-Month.csv";
+            openFileDialog1.Multiselect = true;
             // 
             // Form1
             // 
@@ -125,7 +129,7 @@
             Controls.Add(radioButton1_daily);
             Controls.Add(comboBox1_ticker);
             Name = "Form1";
-            Text = "Form1";
+            Text = "Stock Loader";
             ResumeLayout(false);
             PerformLayout();
         }

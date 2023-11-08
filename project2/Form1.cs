@@ -7,7 +7,6 @@ namespace project2
     public partial class Form1 : Form
     {
         private string timePeriod = "Day";
-        string file;
 
         public Form1()
         {
@@ -81,15 +80,6 @@ namespace project2
                 return;
             }
 
-            // WILL USE THIS FOR THE NEXT FORM
-            //// Make sure there is a valid date range
-            //if (dateTimePicker2_toDate.Value < dateTimePicker1_fromDate.Value)
-            //{
-            //    // Error, invalid date range
-            //    MessageBox.Show("Please make sure the \"from\" date is before the \"to\" date.", "Invalid Date Range", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //    return;
-            //}
-
             // Look for file matching ticker symbol and date period and open it
             string fileName = comboBox1_ticker.SelectedItem.ToString() + "-" + timePeriod + ".csv";
             string stockDataPath = getFolderPath();
@@ -103,10 +93,11 @@ namespace project2
                 return;
             }
 
-            BindingList<candlestick> candlesticks = readData(filePath);
+            BindingList<smartCandlestick> candlesticks = readData(filePath);
 
             // Change to the next form
-            newStockForm(candlesticks);
+            String tickerName = comboBox1_ticker.SelectedItem.ToString() + "-" + timePeriod;
+            newStockForm(candlesticks, tickerName);
         }
 
         // Function to use and open a CSV file for stock data
@@ -116,12 +107,14 @@ namespace project2
             DialogResult result = openFileDialog1.ShowDialog(this);
             if (result == DialogResult.OK)
             {
-                string filePath = openFileDialog1.FileName;
-                file = filePath;
-                BindingList<candlestick> candlesticks = readData(filePath);
+                foreach (String filePath in openFileDialog1.FileNames)
+                {
+                    String tickerName = Path.GetFileNameWithoutExtension(filePath);
+                    BindingList<smartCandlestick> candlesticks = readData(filePath);
 
-                // Change to the next form
-                newStockForm(candlesticks);
+                    // Change to the next form
+                    newStockForm(candlesticks, tickerName);
+                }
             }
             else
             {
@@ -132,9 +125,9 @@ namespace project2
         }
 
         // Function to read data from .csv file
-        private BindingList<candlestick> readData(string filePath)
+        private BindingList<smartCandlestick> readData(string filePath)
         {
-            BindingList<candlestick> candlesticks = new BindingList<candlestick>();
+            BindingList<smartCandlestick> candlesticks = new BindingList<smartCandlestick>();
             string referenceString = "\"Ticker\",\"Period\",\"Date\",\"Open\",\"High\",\"Low\",\"Close\",\"Volume\"";
 
             using (StreamReader sr = new StreamReader(filePath))
@@ -146,7 +139,7 @@ namespace project2
                     if (line != referenceString)
                     {
                         // Pass the data to create a candlestick object
-                        candlestick cs = new candlestick(line);
+                        smartCandlestick cs = new smartCandlestick(line);
                         DateTime csDate = DateTime.Parse(cs.date);
                         candlesticks.Add(cs);
                     }
@@ -154,19 +147,19 @@ namespace project2
             }
 
             // To get the candlesticks in ascending order
-            List<candlestick> reversedList = candlesticks.ToList();
+            List<smartCandlestick> reversedList = candlesticks.ToList();
             reversedList.Reverse();
-            BindingList<candlestick> ascCandlesticks = new BindingList<candlestick>(reversedList);
+            BindingList<smartCandlestick> ascCandlesticks = new BindingList<smartCandlestick>(reversedList);
 
             return ascCandlesticks;
         }
 
         // Function to load the stock information in another form
-        private void newStockForm(BindingList<candlestick> candlesticks)
+        private void newStockForm(BindingList<smartCandlestick> candlesticks, String tickerName)
         {
-            Form2 form2 = new Form2(candlesticks);
+            Form2 form2 = new Form2(tickerName, candlesticks);
+            form2.Text = tickerName;
             form2.Show();
         }
-
     }
 }
