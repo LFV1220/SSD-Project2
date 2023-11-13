@@ -26,22 +26,28 @@ namespace project2
             // Iterate through the files to get ticker names
             foreach (string csvFile in csvFiles)
             {
+                // Get the list of files without the extension or past the '-'
                 string[] fileNameParts = Path.GetFileNameWithoutExtension(csvFile).Split('-');
 
+                // Checking for only the correct file types where there is atleast a dash
                 if (fileNameParts.Length >= 1)
                 {
+                    // Get the tickerName and add it to the list of unique tickers (for no duplicates)
                     string tickerName = fileNameParts[0];
                     uniqueTickers.Add(tickerName);
                 }
             }
 
+            // Clear the comboBox for any unexpected items 
             comboBox1_ticker.Items.Clear();
+            // Add the unique ticker and display it in the comboBox
             comboBox1_ticker.Items.AddRange(uniqueTickers.ToArray());
         }
 
         // Function to set the time period
         private void radioButton_CheckedChanged_setPeriod(object sender, EventArgs e)
         {
+            // Sets the timePeriod based on which radio button is selected
             if (radioButton1_daily.Checked)
             {
                 timePeriod = "Day";
@@ -60,12 +66,15 @@ namespace project2
         public string getFolderPath()
         {
             string currentDirectory = Directory.GetCurrentDirectory();
+
+            // Navigates through the many parent directories to get to the Stock Data folder
             string parentDirectory = Directory.GetParent(currentDirectory).FullName;
             string parentDirectory1 = Directory.GetParent(parentDirectory).FullName;
             string parentDirectory2 = Directory.GetParent(parentDirectory1).FullName;
             string parentDirectory3 = Directory.GetParent(parentDirectory2).FullName;
             string parentDirectory4 = Directory.GetParent(parentDirectory3).FullName;
             string stockDataPath = Path.Combine(parentDirectory4, "Stock Data");
+
             return stockDataPath;
         }
 
@@ -93,26 +102,30 @@ namespace project2
                 return;
             }
 
+            // Calls readData function to make candlestick objects and push them onto a list
             BindingList<smartCandlestick> candlesticks = readData(filePath);
 
             // Change to the next form
             String tickerName = comboBox1_ticker.SelectedItem.ToString() + "-" + timePeriod;
+            //Change to the next form that displays the stock data
             newStockForm(candlesticks, tickerName);
         }
 
         // Function to use and open a CSV file for stock data
         private void openFile(object sender, EventArgs e)
         {
-            // OpenFileDialog
+            // OpenFileDialog popup
             DialogResult result = openFileDialog1.ShowDialog(this);
             if (result == DialogResult.OK)
             {
+                // Iterate through all the files
                 foreach (String filePath in openFileDialog1.FileNames)
                 {
+                    // Calls readData function to make candlestick objects and push them onto a list 
                     String tickerName = Path.GetFileNameWithoutExtension(filePath);
                     BindingList<smartCandlestick> candlesticks = readData(filePath);
 
-                    // Change to the next form
+                    // Change to the next form that displays the stock data
                     newStockForm(candlesticks, tickerName);
                 }
             }
@@ -128,19 +141,23 @@ namespace project2
         private BindingList<smartCandlestick> readData(string filePath)
         {
             BindingList<smartCandlestick> candlesticks = new BindingList<smartCandlestick>();
+
+            // Reference string involves the file header to ignore when reading the data
             string referenceString = "\"Ticker\",\"Period\",\"Date\",\"Open\",\"High\",\"Low\",\"Close\",\"Volume\"";
 
+            // Opens the file and iterates through the csv contents
             using (StreamReader sr = new StreamReader(filePath))
             {
                 while (!sr.EndOfStream)
                 {
+                    // Gets the line of data
                     string line = sr.ReadLine();
 
+                    // Looks for the reference string, to ignore it
                     if (line != referenceString)
                     {
                         // Pass the data to create a candlestick object
                         smartCandlestick cs = new smartCandlestick(line);
-                        DateTime csDate = DateTime.Parse(cs.date);
                         candlesticks.Add(cs);
                     }
                 }
@@ -157,7 +174,10 @@ namespace project2
         // Function to load the stock information in another form
         private void newStockForm(BindingList<smartCandlestick> candlesticks, String tickerName)
         {
+            // Create a new form using the tickerName and the candlesticks list
             Form2 form2 = new Form2(tickerName, candlesticks);
+
+            // Name the form and display it
             form2.Text = tickerName;
             form2.Show();
         }

@@ -16,7 +16,7 @@ namespace project2
     {
         private BindingList<smartCandlestick> candlesticks { get; set; }
         private String tickerName { get; set; }
-        AnnotationCollection annotations { get; set; }
+        public AnnotationCollection annotations { get; set; }
 
         public Form2(String tickerName, BindingList<smartCandlestick> candlesticks)
         {
@@ -26,12 +26,14 @@ namespace project2
             this.candlesticks = candlesticks;
             this.tickerName = tickerName;
 
+            // Displays the data when this form is called
             displayData(candlesticks);
         }
 
         // Function to show the specific stock data pattern, selected by the user
         private void applyPattern(object sender, EventArgs e)
         {
+            // Get the index of the selected index from the comboBox for stock patterns
             int stockPattern = comboBox1_stockPattern.SelectedIndex;
 
             // Check for a valid stock pattern index from combobox 
@@ -48,6 +50,9 @@ namespace project2
             // Remove any existing annotations (to refresh the view)
             annotations.Clear();
 
+            // Calculate a size to help with the annotation sizing/positioning
+            double avgInterval = (DateTime.Parse(candlesticks[1].date) - DateTime.Parse(candlesticks[0].date)).TotalDays / 2;
+
             foreach (var cs in candlesticks)
             {
                 // Check if the candlestick is in the date range
@@ -60,7 +65,7 @@ namespace project2
                         case 1:
                             if (cs.isBullish)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -68,7 +73,7 @@ namespace project2
                         case 2:
                             if (cs.isBearish)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -76,7 +81,7 @@ namespace project2
                         case 3:
                             if (cs.isNeutral)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -84,7 +89,7 @@ namespace project2
                         case 4:
                             if (cs.isMarubozu)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -92,7 +97,7 @@ namespace project2
                         case 5:
                             if (cs.isDoji)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -100,7 +105,7 @@ namespace project2
                         case 6:
                             if (cs.isDragonFlyDoji)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -108,7 +113,7 @@ namespace project2
                         case 7:
                             if (cs.isGravestoneDoji)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -116,7 +121,7 @@ namespace project2
                         case 8:
                             if (cs.isHammer)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -124,7 +129,7 @@ namespace project2
                         case 9:
                             if (cs.isInvertedHammer)
                             {
-                                RectangleAnnotation annotation = newAnnotation(cs, csDate);
+                                RectangleAnnotation annotation = newAnnotation(cs, csDate, avgInterval);
                                 annotations.Add(annotation);
                             }
                             break;
@@ -135,16 +140,17 @@ namespace project2
         }
 
         // Helper function to create the annotations to show stock patterns
-        private RectangleAnnotation newAnnotation(smartCandlestick cs, DateTime csDate)
+        private RectangleAnnotation newAnnotation(smartCandlestick cs, DateTime csDate, double avgInterval)
         {
+            // Creates an annotation and other properties for sizing/positioning
             RectangleAnnotation annotation = new RectangleAnnotation();
             annotation.AxisX = chart1_stockData.ChartAreas[0].AxisX;
             annotation.AxisY = chart1_stockData.ChartAreas[0].AxisY;
-            annotation.X = csDate.ToOADate(); // X-value is the date (STARTS AT THE CENTER OF CANDLESTICK, FIX THIS)
-            annotation.Y = (double)cs.high;   // Y-value is the high price
-            annotation.Width = 1.0;          // Adjust the width as needed
-            annotation.Height = (double)cs.range; // Adjust the height as needed
-            annotation.BackColor = Color.FromArgb(128, Color.Yellow); // Fill color
+            annotation.X = csDate.ToOADate() - avgInterval;
+            annotation.Y = (double)cs.high;  
+            annotation.Width = 2.0;          
+            annotation.Height = (double)cs.range;
+            annotation.BackColor = Color.FromArgb(128, Color.Yellow);
 
             return annotation;
         }
@@ -179,9 +185,8 @@ namespace project2
         // Function to reset what is on the form/page
         private void resetForm(object sender, EventArgs e)
         {
-            // Set comboBox and dates to default value
-
-
+            // Initialize the annotations to the stockData chart
+            annotations = chart1_stockData.Annotations;
             annotations.Clear();
 
             // Call displayData function with global candlesticks list 
@@ -191,15 +196,18 @@ namespace project2
         // Function to display the stock data as a stock price chart and volume chart
         private void displayData(BindingList<smartCandlestick> candlesticks)
         {
+            // Clear the charts since they are supposed to be empty to start
             chart1_stockData.Series.Clear();
             chart2_stockVolume.Series.Clear();
 
+            // Candlestick chart info  
             Series candlestickSeries = new Series("Candlestick")
             {
-                ChartType = SeriesChartType.Candlestick, // use candlestick chart type
+                ChartType = SeriesChartType.Candlestick,
                 XValueType = ChartValueType.Date,
             };
 
+            // Volume chart info 
             Series volumeSeries = new Series("Volume")
             {
                 ChartType = SeriesChartType.Column,
@@ -211,6 +219,7 @@ namespace project2
 
             foreach (var cs in candlesticks)
             {
+                // Plots the points for each candlestick
                 DataPoint datapoint = new DataPoint
                 {
                     XValue = DateTime.Parse(cs.date).ToOADate(),
@@ -218,10 +227,10 @@ namespace project2
                 };
 
                 // candlestick size based on price difference
-                double priceDifference = Math.Abs((double)cs.close - (double)cs.open);
-                datapoint.SetCustomProperty("PriceDifference", priceDifference.ToString());
+                //double priceDifference = Math.Abs((double)cs.close - (double)cs.open);
+                //datapoint.SetCustomProperty("PriceDifference", priceDifference.ToString());
 
-                // set the color based on open and close values
+                // Set the color based on open and close values
                 if (cs.open < cs.close)
                 {
                     datapoint.Color = Color.Green;
@@ -231,6 +240,7 @@ namespace project2
                     datapoint.Color = Color.Red;
                 }
 
+                // Add the points for both charts 
                 candlestickSeries.Points.Add(datapoint);
                 volumeValues.Add(cs.volume);
 
@@ -240,7 +250,7 @@ namespace project2
                 yValues.Add((double)cs.close);
             }
 
-            // for the volume chart
+            // For the volume chart
             for (int i = 0; i < candlesticks.Count; i++)
             {
                 DataPoint datapoint = new DataPoint
@@ -251,6 +261,7 @@ namespace project2
                 volumeSeries.Points.Add(datapoint);
             }
 
+            // More properties for the charts
             chart1_stockData.Series.Add(candlestickSeries);
             chart2_stockVolume.Series.Add(volumeSeries);
 
